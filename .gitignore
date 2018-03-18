@@ -1,0 +1,7 @@
+# Final build output
+/firmware.elf
+/firmware.hex
+/firmware.lss
+/firmware.map
+/firmware.sym
+
