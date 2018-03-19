@@ -30,15 +30,14 @@ int main() {
 	// Configure PWM outputs
 	bit_set(DDRB, PB1); // PB3 (OC1A) is output
 	bit_clr(PORTB, PB1); // ... and off
-	bit_set(DDRB, PB4); // PB4 (OC1B) is output
-	bit_clr(PORTB, PB4); // ... and off
 
 	TCCR1 = (0 << CTC1)            // Run in full cycles (from 0 to 255)
 	      | (1 << PWM1A)           // Enable Modulator A
-	      | (1 << COM1A1)          // OC1x clear on 0, set on match
-	      | (1 << COM1A0)          // ... and inverted output disconencted
+	      | (1 << COM1A1)          // OC1x set on 0, clear on match
+	      | (0 << COM1A0)          // ... and inverted output disconencted
 	      | (PWM_PRESCALER & 0x0F) // Set prescaler form config
 	      ;
+	OCR1A = 0x00;
 	
 	// Configure and enable I2C
 	twi_init(TWI_ADDRESS,
