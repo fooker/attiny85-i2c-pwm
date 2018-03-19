@@ -35,7 +35,7 @@ AVRDUDE = avrdude
 all: $(TARGET).hex $(TARGET).lss $(TARGET).sym size
 
 flash: all
-	$(AVRDUDE) -p attiny85 -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -U flash:w:$(TARGET).hex -U lfuse:w:0x62:m -U hfuse:w:0xDF:m -U efuse:w:0xFF:m
+	$(AVRDUDE) -p attiny85 -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -U flash:w:$(TARGET).hex -U lfuse:w:0xE2:m -U hfuse:w:0xDF:m -U efuse:w:0xFF:m
 
 %.hex: %.elf
 	$(OBJCOPY) -O ihex -j .data -j .text $< $@
