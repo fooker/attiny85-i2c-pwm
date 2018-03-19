@@ -17,12 +17,12 @@ bool twi_loader(twi_direction_t direction __attribute__((unused))) {
 
 bool twi_reader(volatile uint8_t* b) {
 	*b = OCR1A;
-	return false;
+	return true;
 }
 
 bool twi_writer(volatile uint8_t* const b) {
 	OCR1A = *b;
-	return false;
+	return true;
 }
 
 
