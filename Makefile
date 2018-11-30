@@ -21,7 +21,8 @@ CFLAGS = -mmcu=attiny85 \
 
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 
-AVRDUDE_PROGRAMMER = stk500v2
+#AVRDUDE_PROGRAMMER = stk500v2
+AVRDUDE_PROGRAMMER = avrisp -b 19200
 AVRDUDE_PORT = /dev/ttyACM0
 
 CC = avr-gcc
