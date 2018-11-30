@@ -5,6 +5,9 @@ The idea is to implement a microcontroller interface (I2C slave) and signal gene
 
 New micros like ESP8266 don't work very well as signal generators, but provide some other functionalities. So with this code you can use an ATTiny85 as an interface to communicate to the TB6600 and setup some parameters like RPM, direction, etc just writting on function registers via I²C.
 
+Note:
+For now the firmware supports free-run mode only. Which means you can set the speed and it'll move until you send another command to shut off the timer.
+
 ## TB6600 pins and info
 
 The TB6600 uses 3 opto-coupled signals to command the stepper motor: pulse (`PUL+`, `PUL-`), direction (`DIR+`, `DIR-`) and enable (`ENA+`, `ENA-`).
