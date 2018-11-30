@@ -46,6 +46,46 @@ To setup the ATTiny85 just write over the I2C the function address (higher nibbl
 |  0 |  0 |  1 |  0 | X  | X  | X  | X  | `FUNC_OCRAL`: Timer1 counter (Lower nibble)  |
 |  0 |  0 |  1 |  1 | X  | X  | X  | X  | `FUNC_OCRAH`: Timer1 counter (Higher nibble) |
 
+### Function example to setup RPM
+
+This is a draft function to represent how to set the ATTiny prescale and counter from a RPM speed value.
+
+```c++
+#define 	MIN_RPM		0
+#define 	MAX_RPM		250
+
+uint16_t	_ppv 	= 800		//800 pulses to make 1 turn
+
+void setRPM(uint16_t rpm) {
+  if ( (rpm<MIN_RPM) || (rpm>MAX_RPM) ) return;
+  
+  uint8_t		_pre;		// prescale value (0 to 15)
+  uint8_t		_ocr;		// counter value (0 to 255)
+
+  if (rpm == 0) {
+    _pre = 0;
+    _ocr = 0;
+  } else {    
+    uint16_t comp = (8000000L * 60) / (256 * _ppv * rpm);
+
+    _pre = 1;
+    uint16_t k;
+    for (k=2; _pre<16; _pre++) {
+      if (comp < k) {
+        break;
+      } else {
+        k<<=1;
+      }
+    }
+
+    _ocr = ((8000000L * 60) / (k * _ppv * rpm)) - 1;
+    
+    i2c_write(FUNC_PRESC, pre & 0x0F);
+    i2c_write(FUNC_OCRAL, ocr & 0x0F);
+    i2c_write(FUNC_OCRAH, (ocr >> 4) & 0x0F);
+  }
+```
+
 ## TODO:
 * Polish the code.
 * Function to move the shaft an specified number of steps. This probably will require to add more function registers in the future.
