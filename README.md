@@ -80,9 +80,9 @@ void setRPM(uint16_t rpm) {
 
     _ocr = ((8000000L * 60) / (k * _ppv * rpm)) - 1;
     
-    i2c_write(FUNC_PRESC, pre & 0x0F);
-    i2c_write(FUNC_OCRAL, ocr & 0x0F);
-    i2c_write(FUNC_OCRAH, (ocr >> 4) & 0x0F);
+    i2c_write(FUNC_PRESC, _pre & 0x0F);
+    i2c_write(FUNC_OCRAL, _ocr & 0x0F);
+    i2c_write(FUNC_OCRAH, (_ocr >> 4) & 0x0F);
   }
 ```
 
