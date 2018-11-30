@@ -46,7 +46,7 @@ To setup the ATTiny85 just write over the I2C the function address (higher nibbl
 |  0 |  0 |  1 |  0 | X  | X  | X  | X  | `FUNC_OCRAL`: Timer1 counter (Lower nibble)  |
 |  0 |  0 |  1 |  1 | X  | X  | X  | X  | `FUNC_OCRAH`: Timer1 counter (Higher nibble) |
 
-### Function example to setup RPM
+### Function example to set the motor speed in RPM
 
 This is a draft function to represent how to set the ATTiny prescale and counter from a RPM speed value.
 
@@ -57,16 +57,22 @@ This is a draft function to represent how to set the ATTiny prescale and counter
 uint16_t	_ppv 	= 800		//800 pulses to make 1 turn
 
 void setRPM(uint16_t rpm) {
-  if ( (rpm<MIN_RPM) || (rpm>MAX_RPM) ) return;
+  if ( (rpm<MIN_RPM) || (rpm>MAX_RPM) ) return;   // Check the speed range...
   
   uint8_t		_pre;		// prescale value (0 to 15)
   uint8_t		_ocr;		// counter value (0 to 255)
 
   if (rpm == 0) {
+     // Set prescale to 0 to stop the timer
     _pre = 0;
     _ocr = 0;
   } else {    
-    uint16_t comp = (8000000L * 60) / (256 * _ppv * rpm);
+  
+    // Calculate the best prescale/counter combination to achieve the desired RPM
+    // This is done in two steps, first estimate a prescale value, then use it to
+    // calculate the best counter value.
+    
+    uint16_t comp = (8000000L * 60) / (256 * _ppv * rpm);  
 
     _pre = 1;
     uint16_t k;
@@ -79,10 +85,11 @@ void setRPM(uint16_t rpm) {
     }
 
     _ocr = ((8000000L * 60) / (k * _ppv * rpm)) - 1;
-    
-    i2c_write(FUNC_PRESC, _pre & 0x0F);
-    i2c_write(FUNC_OCRAL, _ocr & 0x0F);
-    i2c_write(FUNC_OCRAH, (_ocr >> 4) & 0x0F);
+        
+    i2c_write(FUNC_PRESC, _pre & 0x0F);          // Set prescale
+    i2c_write(FUNC_OCRAL, _ocr & 0x0F);          // Set counter lower nibble
+    i2c_write(FUNC_OCRAH, (_ocr >> 4) & 0x0F);   // Set counter higher nibble (Timer enabled now)
+    i2c_write(FUNC_SHAFT, 0b0010);               // Clock-wise direction '1' & Enable driver '0'
   }
 ```
 
