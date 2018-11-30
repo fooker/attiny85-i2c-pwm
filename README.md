@@ -37,11 +37,16 @@ To setup the ATTiny85 just write over the I2C the function address (higher nibbl
 
 | Higher nibble | Lower nibble |
 |---------------|--------------|
-| F[3-0] | D[3-0] |
+| F[3-0]        | D[3-0]       |
  
-| F3 | F2 | F1 | F0 | D3 | D2 | D1 | D0 | Register function              |
-|----|----|----|----|----|----|----|----|--------------------------------|
-|  0 |  0 |  0 |  0 | X  | X  |DIR |ENA | Driver setup signals           |
-|  0 |  0 |  0 |  1 | X  | X  | X  | X  | Timer1 prescaler               |
-|  0 |  0 |  1 |  0 | X  | X  | X  | X  | Timer1 counter (Lower nibble)  |
-|  0 |  0 |  1 |  1 | X  | X  | X  | X  | Timer1 counter (Higher nibble) |
+| F3 | F2 | F1 | F0 | D3 | D2 | D1 | D0 | Register function                            |
+|----|----|----|----|----|----|----|----|----------------------------------------------|
+|  0 |  0 |  0 |  0 | X  | X  |DIR |ENA | `FUNC_SHAFT`: Driver setup signals           |
+|  0 |  0 |  0 |  1 | X  | X  | X  | X  | `FUNC_PRESC`: Timer1 prescaler               |
+|  0 |  0 |  1 |  0 | X  | X  | X  | X  | `FUNC_OCRAL`: Timer1 counter (Lower nibble)  |
+|  0 |  0 |  1 |  1 | X  | X  | X  | X  | `FUNC_OCRAH`: Timer1 counter (Higher nibble) |
+
+## TODO:
+* Polish the code.
+* Function to move the shaft an specified number of steps. This probably will require to add more function registers in the future.
+* Add an Arduino library to make it work with other micros like esp8266.
