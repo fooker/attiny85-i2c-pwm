@@ -14,8 +14,8 @@ https://www.dfrobot.com/wiki/index.php/TB6600_Stepper_Motor_Driver_SKU:_DRI0043
 ## Pins and Wiring
 
 Beside the usual `VCC` and`GND` pins, the following pins are used:
-* 2 (`PB0`) - ENA+
-* 3 (`PB0`) - DIR+
+* 2 (`PB3`) - ENA+
+* 3 (`PB4`) - DIR+
 * 5 (`PB0`) - I²C SDA
 * 6 (`PB1`) - PUL+
 * 7 (`PB2`) - I²C SCL
