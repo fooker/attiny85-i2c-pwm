@@ -69,13 +69,13 @@ void setRPM(uint16_t rpm) {
      // Set prescale to 0 to stop the timer
     _pre = 0;
     _ocr = 0;
-  } else {    
+  } else {
   
     // Calculate the best prescale/counter combination to achieve the desired RPM
     // This is done in two steps, first estimate a prescale value, then use it to
     // calculate the best counter value.
     
-    uint16_t comp = (8000000L * 60) / (256 * _ppv * rpm);  
+    uint16_t comp = (8000000L * 60) / (256 * _ppv * rpm);
 
     _pre = 1;
     uint16_t k;

@@ -1,5 +1,3 @@
-#define FOSC 1000000L
-
 // PINOUT
 #define ENA_PIN					PB3
 #define DIR_PIN					PB4
@@ -12,19 +10,24 @@
 #define REG_MOD						3
 
 // FUNCTION ADDRESS
-#define FUNC_SHAFT  		0x00        // SHAFT
-#define FUNC_PRESC  		0x01        // PRESCALER
-#define FUNC_OCRAL  		0x02        // OCRA
-#define FUNC_OCRAH 			0x03
-#define FUNC_PPT0L			0x04        // STEPS
-#define FUNC_PPT0H  		0x05
-#define FUNC_PPT1L  		0x06
-#define FUNC_PPT1H  		0x07
-#define FUNC_PPT2L  		0x08
-#define FUNC_PPT2H  		0x09
-#define FUNC_PPT3L  		0x0A
-#define FUNC_PPT3H			0x0B
-#define FUNC_END			0x0C
+#define FUNC_SHAFT  		0        // SHAFT
+#define FUNC_RPML 			1        // Revolutions-per-Minute
+#define FUNC_RPMH 			2
+#define FUNC_RES_0          3   
+#define FUNC_PPT0L			4        // Total steps on command
+#define FUNC_PPT0H  		5
+#define FUNC_PPT1L  		6
+#define FUNC_PPT1H  		7
+#define FUNC_PPT2L  		8
+#define FUNC_PPT2H  		9
+#define FUNC_PPT3L  		10
+#define FUNC_PPT3H			11
+#define FUNC_SPT0L 			12        // Steps-per-Turn
+#define FUNC_SPT0H 			13
+#define FUNC_SPT1L 			14
+#define FUNC_SPT1H 			15
+
+#define FUNC_END			16
 
 
 // MODE
