@@ -79,13 +79,13 @@ int main() {
 	i2c_setup_flag = 0;
 	sei();
 
-	driver_test();
+	// driver_test();
 
-	// Main control loop
+	// - Main control loop -------------------------------------------------------------
 	while (true) {
-		if (i2c_setup_flag > 0) {
-			if (bit_get(i2c_setup_flag, 4)) {
-				if (M_SPT) setup_timer(M_RPM, M_SPT);			
+		if (i2c_setup_flag) {
+			if (bit_get(i2c_setup_flag, 1)) {
+				setup_timer(M_RPM, M_SPT);			
 			}
 			if (bit_get(i2c_setup_flag, 0)) {
 				(M_ENA) 	? enable_driver()		 		: disable_driver();
@@ -96,6 +96,7 @@ int main() {
 			i2c_setup_flag = 0;
 		}
 	}
+	// ---------------------------------------------------------------------------------
 
 	return (1);
 }
@@ -107,19 +108,13 @@ inline void driver_test() {
 	M_ENA = 1;
 	M_DIR = 1;
 	M_MOV = 1;
-	M_MOD = 1;
+	M_MOD = 0;
 	bit_set(i2c_setup_flag,0);
 
 	M_STEPS = 800;
-	bit_set(i2c_setup_flag,1);
-
-	// M_PRES = 0b0110;		// 1 seg
-	// M_OSCR = 0b10011011;	// 1 seg
-	// bit_set(i2c_setup_flag,2);	
-
-	M_RPM = 6;
+	M_RPM = 59;
 	M_SPT = 800;
-	bit_set(i2c_setup_flag, 4);	
+	bit_set(i2c_setup_flag,1);	
 }
 
 
@@ -146,21 +141,29 @@ void disable_isr() {
 
 inline void setup_timer(uint8_t rpm, uint16_t spt) {
 	uint8_t _pre, _ocr;	
-	if ((rpm == 0) || (spt == 0)) {
+	if (!rpm || !spt) {
 		_pre = _ocr = 0;
-	} else {		
-		uint16_t comp = (F_CPU * 60UL / 256UL) * spt * rpm;
+	} else {
+		// uint32_t comp = (F_CPU * 60UL) / (256UL * spt * rpm);
+		uint32_t comp = (F_CPU * 60UL / 256UL);
+		comp /= spt;
+		comp /= rpm;
 
+		// Prescaler selection ...
 		_pre = 1;
-		uint32_t k;
-		for (k=2; _pre<16; _pre++) {
-			if (comp < k) {
-				break;
-			} else {
-				k*=2;
-			}
-		}
-		_ocr = ( (F_CPU * 60UL) / (k * spt * rpm) ) - 1;
+		uint32_t k=2;
+		while((k < comp) && (_pre<16)) { k<<=1; _pre++; }
+	
+		// OCR Calculation ...
+		comp = (F_CPU * 60UL);
+		comp /= k;
+		comp /= spt;
+		comp /= rpm;
+		comp -= 1;
+		
+		_ocr = (uint8_t) comp;
+
+		// _ocr = ( (F_CPU * 60UL) / (k * spt * rpm) ) - 1;
 	}
 	
 	timer_oscr = _ocr;
@@ -206,45 +209,25 @@ bool twi_writer(volatile uint8_t* const b) {
 			M_MOD			= bit_get(data, REG_MOD);
 			bit_set(i2c_setup_flag, 0);
 			twi_nibbles_comp = 0;
-			break;
+		break;
 		
 		case FUNC_RPML:
 		case FUNC_RPMH:
 			twi_nibbles_comp |= 1<<(func-FUNC_RPML);
-			twi_nibbles_data |= ((data ) << (4*(func-FUNC_RPML)));			
+			twi_nibbles_data |= (data << (4*(func-FUNC_RPML)));			
 			if (func == FUNC_RPMH) {
 				if (twi_nibbles_comp == 0b00000011) {
-					M_RPM = twi_nibbles_data;	
-					bit_set(i2c_setup_flag, 4);
+					M_RPM = (uint8_t) twi_nibbles_data;	
+					bit_set(i2c_setup_flag, 1);
 				}
 				twi_nibbles_comp = 0;
 				twi_nibbles_data = 0;	 
 			}
-			break;
+		break;
 		
 		case FUNC_RES_0:	//reserved
-			break;
-			
-		// case FUNC_PRESC:
-		// 	M_PRES = data;			
-		// 	bit_set(i2c_setup_flag, 1);
-		// 	twi_nibbles_comp = 0;
-		// 	break;
-
-		// case FUNC_OCRAL:
-		// case FUNC_OCRAH:
-		// 	twi_nibbles_comp |= 1<<(func-FUNC_OCRAL);
-		// 	twi_nibbles_data |= (data << (4*(func-FUNC_OCRAL)));			
-		// 	if (func == FUNC_OCRAH) {
-		// 		if (twi_nibbles_comp == 0b00000011) {
-		// 			M_OSCR = (uint8_t) twi_nibbles_data;
-		// 			bit_set(i2c_setup_flag, 1);	
-		// 		}	
-		// 		twi_nibbles_comp = 0;
-		// 		twi_nibbles_data = 0;
-		// 	}
-		// 	break;
-			
+		break;
+					
 		case FUNC_PPT0L:
 		case FUNC_PPT0H:
 		case FUNC_PPT1L:
@@ -254,7 +237,7 @@ bool twi_writer(volatile uint8_t* const b) {
 		case FUNC_PPT3L:
 		case FUNC_PPT3H:
 			twi_nibbles_comp |= 1<<(func-FUNC_PPT0L);
-			twi_nibbles_data |= ((data ) << (4*(func-FUNC_PPT0L)));			
+			twi_nibbles_data |= (data << (4*(func-FUNC_PPT0L)));			
 			if (func == FUNC_PPT3H) {
 				if (twi_nibbles_comp == 0b11111111) {
 					M_STEPS = twi_nibbles_data;	
@@ -263,81 +246,33 @@ bool twi_writer(volatile uint8_t* const b) {
 				twi_nibbles_comp = 0;
 				twi_nibbles_data = 0;	 
 			}
-			break;
+		break;
 
 		case FUNC_SPT0L:
 		case FUNC_SPT0H:
 		case FUNC_SPT1L:
 		case FUNC_SPT1H:
 			twi_nibbles_comp |= 1<<(func-FUNC_SPT0L);
-			twi_nibbles_data |= ((data ) << (4*(func-FUNC_SPT0L)));			
+			twi_nibbles_data |= (data << (4*(func-FUNC_SPT0L)));			
 			if (func == FUNC_SPT1H) {
 				if (twi_nibbles_comp == 0b00001111) {
-					M_SPT = twi_nibbles_data;	
+					M_SPT = (uint16_t) twi_nibbles_data;	
 					bit_set(i2c_setup_flag, 3);
 				}
 				twi_nibbles_comp = 0;
 				twi_nibbles_data = 0;	 
 			}
-			break;
-		
-		
+		break;
 	}
 
 	return true;
 }
 
-bool twi_loader(twi_direction_t direction __attribute__((unused))) {
-	return true;
-}
+// Not implemented
+bool twi_loader(twi_direction_t direction __attribute__((unused))) { return true; }
 
-bool twi_reader(volatile uint8_t* b) {
-	// if (twi_reader_addr < FUNC_END) {
-	// 	switch(twi_reader_addr) {
-	// 		case FUNC_SHAFT:
-	// 			*b = (twi_reader_addr<<4) | (M_ENA << REG_ENA) | (M_DIR << REG_DIR) | (M_MOV << REG_MOV) | (M_MOD << REG_MOD);
-	// 			break;
-	// 		case FUNC_PRESC:
-	// 			*b = M_PRES;
-	// 			break;
-	// 		case FUNC_OCRAL:
-	// 			*b = (twi_reader_addr<<4) | ((M_OSCR >> 0) & 0x0F);
-	// 			break;
-	// 		case FUNC_OCRAH:
-	// 			*b = (twi_reader_addr<<4) | ((M_OSCR >> 4) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT0L:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 0) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT0H:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 4) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT1L:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 8) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT1H:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 12) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT2L:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 16) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT2H:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 20) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT3L:	
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 24) & 0x0F);
-	// 			break;
-	// 		case FUNC_PPT3H:
-	// 			*b = (twi_reader_addr<<4) | ((M_STEPS >> 28) & 0x0F);
-	// 			break;				
-	// 	}
-	// 	twi_reader_addr++;
-	// } else {
-	// 	twi_reader_addr = 0;
-	// }
-	*b = 0;
-	return true;
-}
+// Not implemented
+bool twi_reader(volatile uint8_t* b) {	*b = 0;	return true; }
 
 
 
@@ -355,17 +290,5 @@ ISR(TIMER1_COMPA_vect) {
 		stop_timer();
 		disable_isr();
 		disable_driver();
-	}
-	
-	// ------------------- TEST
-	/*
-	if (isr_status) {
-		isr_status = 0;
-		bit_clr(PORTB, DIR_PIN);
-	} else {
-		isr_status = 1;
-		bit_set(PORTB, DIR_PIN);
-	}
-	*/
-	// -------------------
+	}	
 }
